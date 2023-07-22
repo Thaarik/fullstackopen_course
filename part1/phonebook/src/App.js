@@ -2,7 +2,8 @@ import { useState, useEffect } from "react";
 import Filter from "./Filter";
 import PersonForm from "./PersonForm";
 import Persons from "./Persons";
-import axios from "axios";
+import RESTapi from "./RESTapi";
+
 const App = () => {
   const [persons, setPersons] = useState([]);
   const [newName, setNewName] = useState("");
@@ -24,19 +25,26 @@ const App = () => {
     let names = persons.map((person) => person.name);
     if (newName !== "") {
       if (!names.includes(newName)) {
-        setPersons(persons.concat({ name: newName, number: newNumber }));
-        setNewName("");
-        setNewNumber("");
+        let newContact = { name: newName, number: newNumber };
+        RESTapi.create(newContact).then((returnedPersons) => {
+          setPersons(persons.concat(returnedPersons));
+          setNewName("");
+          setNewNumber("");
+        });
       } else {
         alert(`Person ${newName} already included!!!!`);
       }
     }
   };
-  
+  const handleDelete = (deleteid,deletename) => {
+    if (window.confirm(`Do you confirm to delete the contact ${deletename}?`)) {
+      RESTapi.deleteContact(deleteid);
+      setPersons(persons.filter((person) => person.id!== deleteid));
+    }
+  };
+
   useEffect(() => {
-    axios.get("http://localhost:3001/persons").then((response) => {
-      setPersons(response.data);
-    });
+    RESTapi.getAll().then((initialPersons) => setPersons(initialPersons));
   }, []);
 
   return (
@@ -53,12 +61,13 @@ const App = () => {
       />
       <h2>Numbers</h2>
       {searchText === "" ? (
-        <Persons persons={persons} />
+        <Persons persons={persons} deletePerson={handleDelete} />
       ) : (
         <Persons
           persons={persons.filter((person) =>
             person.name.toLowerCase().includes(searchText)
           )}
+          deletePerson={handleDelete}
         />
       )}
     </div>
