@@ -9,9 +9,12 @@ const App = () => {
   const [newName, setNewName] = useState("");
   const [newNumber, setNewNumber] = useState("");
   const [searchText, setSearchText] = useState("");
+
   const handleName = (event) => {
+    console.log(event.target.value);
     setNewName(event.target.value);
   };
+  
   const handleNumber = (event) => {
     setNewNumber(event.target.value);
   };
@@ -19,6 +22,7 @@ const App = () => {
   const handleSearch = (event) => {
     setSearchText(event.target.value);
   };
+
   const handleSubmit = (event) => {
     event.preventDefault(); // Prevent form submission
 
@@ -32,14 +36,38 @@ const App = () => {
           setNewNumber("");
         });
       } else {
-        alert(`Person ${newName} already included!!!!`);
+        if (
+          window.confirm(
+            `${newName} is already added to the phonebook. Replace the old one with new phoneNumber?`
+          )
+        ) {
+          let selectedPerson = persons.find(
+            (person) => person.name === newName
+          );
+          let selectedPersonId = selectedPerson.id;
+          let updatedPerson = { ...selectedPerson, number: newNumber };
+          console.log(selectedPersonId);
+          RESTapi.update(updatedPerson, selectedPersonId).then(
+            (updatedResponse) => {
+              console.log(updatedResponse);
+              setPersons(
+                persons.map((person) =>
+                  person.id !== selectedPersonId ? person : updatedResponse
+                )
+              );
+              setNewName("");
+              setNewNumber("");
+            }
+          );
+        }
       }
     }
   };
-  const handleDelete = (deleteid,deletename) => {
+
+  const handleDelete = (deleteid, deletename) => {
     if (window.confirm(`Do you confirm to delete the contact ${deletename}?`)) {
       RESTapi.deleteContact(deleteid);
-      setPersons(persons.filter((person) => person.id!== deleteid));
+      setPersons(persons.filter((person) => person.id !== deleteid));
     }
   };
 

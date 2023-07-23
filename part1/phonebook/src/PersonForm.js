@@ -1,6 +1,7 @@
 import React from 'react'
 
 const PersonForm = ({name,number,submit,valueName,valueNumber}) => {
+
   return (
     <form>
         <div>
