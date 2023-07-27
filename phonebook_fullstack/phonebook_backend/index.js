@@ -4,7 +4,7 @@ const app = express();
 const cors = require('cors')
 
 app.use(cors())
-
+app.use(express.static('build'))
 morgan.token('object', function getId (req) {
     // console.log(req);
     return JSON.stringify(req.body)
