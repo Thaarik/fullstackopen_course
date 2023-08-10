@@ -1,8 +1,9 @@
+require('dotenv').config()
 const express = require("express");
 const morgan = require('morgan');
 const app = express();
 const cors = require('cors')
-
+const Phonebook=require('./models/phonebook')
 app.use(cors())
 app.use(express.static('build'))
 morgan.token('object', function getId (req) {
@@ -14,75 +15,89 @@ app.use(express.json());
 app.use(morgan(':method :url :status :object'))
 
 
-let personData = [
-  {
-    id: 1,
-    name: "Arto Hellas",
-    number: "040-123456",
-  },
-  {
-    id: 2,
-    name: "Ada Lovelace",
-    number: "39-44-5323523",
-  },
-  {
-    id: 3,
-    name: "Dan Abramov",
-    number: "12-43-234345",
-  },
-  {
-    id: 4,
-    name: "Mary Poppendieck",
-    number: "39-23-6423122",
-  },
-];
+// let personData = [
+//   {
+//     id: 1,
+//     name: "Arto Hellas",
+//     number: "040-123456",
+//   },
+//   {
+//     id: 2,
+//     name: "Ada Lovelace",
+//     number: "39-44-5323523",
+//   },
+//   {
+//     id: 3,
+//     name: "Dan Abramov",
+//     number: "12-43-234345",
+//   },
+//   {
+//     id: 4,
+//     name: "Mary Poppendieck",
+//     number: "39-23-6423122",
+//   },
+// ];
 
 app.get("/", (request, response) => {
   response.send("<h1>Hello World!</h1>");
 });
 
 app.get("/api/persons", (request, response) => {
-  response.json(personData);
+  Phonebook.find({}).then(contacts=>{
+    console.log(contacts)
+    response.json(contacts)
+  })
 });
 
-app.get("/info", (request, response) => {
-  const date = new Date();
-  const dataLength = personData.length;
-  response.send(
-    `<p>Phonebook has info for ${dataLength}</p><br/><p>${date}</p>`
-  );
-});
+// app.get("/info", (request, response) => {
+//   const date = new Date();
+//   const dataLength = personData.length;
+//   response.send(
+//     `<p>Phonebook has info for ${dataLength}</p><br/><p>${date}</p>`
+//   );
+// });
 
-app.get("/api/person/:id", (request, response) => {
-  const personId = Number(request.params.id);
-  const person = personData.find((data) => data.id === personId);
-  if (person) {
-    response.json(person);
-  } else {
-    response.status(404).end();
-  }
-});
+// app.get("/api/person/:id", (request, response) => {
+//   const personId = Number(request.params.id);
+//   const person = personData.find((data) => data.id === personId);
+//   if (person) {
+//     response.json(person);
+//   } else {
+//     response.status(404).end();
+//   }
+// });
 
 app.post("/api/persons", (request, response) => {
-  const personId = Math.floor(Math.random() * 100);
-  const phonebookNames = personData.map((data) => data.name);
-  if (
-    request.body.name &&
-    request.body.number &&
-    !phonebookNames.includes(request.body.name)
-  ) {
-    personData = personData.concat({
-      id: personId,
-      name: request.body.name,
-      number: request.body.number,
-    });
+  // const personId = Math.floor(Math.random() * 100);
+  // const phonebookNames = personData.map((data) => data.name);
+  // if (
+  //   request.body.name &&
+  //   request.body.number &&
+  //   !phonebookNames.includes(request.body.name)
+  // ) {
+  //   personData = personData.concat({
+  //     id: personId,
+  //     name: request.body.name,
+  //     number: request.body.number,
+  //   });
 
-    response.json(personData);
-  } else if (phonebookNames.includes(request.body.name)) {
-    response.status(403).json({ error: "name must be unique" });
-  } else {
-    response.status(400).json({ error: "please enter name and number" });
+  //   response.json(personData);
+  // } else if (phonebookNames.includes(request.body.name)) {
+  //   response.status(403).json({ error: "name must be unique" });
+  // } else {
+  //   response.status(400).json({ error: "please enter name and number" });
+  // }
+  const body=request.body
+  if(body.name===undefined || body.number===undefined){
+    return response.status(400).json({error:'content missing'})
   }
+  const contact = new Phonebook({
+    name:body.name,
+    number:body.number
+  })
+  contact.save().then(savedContact=>{
+    response.json(savedContact)
+  })
 });
 
 app.delete("/api/person/:id", (request, response) => {
