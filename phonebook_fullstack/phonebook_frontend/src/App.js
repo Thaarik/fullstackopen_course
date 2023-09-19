@@ -73,7 +73,7 @@ const App = () => {
               setNewNumber("");
             })
             .catch((error) => {
-              setmessage(`Person was already removed}`);
+              setmessage(`Person was already removed`);
               setMessageType("error");
               setTimeout(() => {
                 setmessage(null);

@@ -14,6 +14,13 @@ app.use(express.json());
 
 app.use(morgan(':method :url :status :object'))
 
+const errorHandler = (error,req,res,next)=>{
+  console.log(error.message);
+  if(error.name==='CastError'){
+    return res.status(400).send({error:'malformed id'})
+  }
+  next(error)
+}
 
 // let personData = [
 //   {
@@ -49,23 +56,17 @@ app.get("/api/persons", (request, response) => {
   })
 });
 
-// app.get("/info", (request, response) => {
-//   const date = new Date();
-//   const dataLength = personData.length;
-//   response.send(
-//     `<p>Phonebook has info for ${dataLength}</p><br/><p>${date}</p>`
-//   );
-// });
+app.get("/info", (request, response) => {
+  Phonebook.find({}).then(contacts=>{
+    console.log(contacts)
+    response.json({'Number of contacts in the phonebook':contacts.length})
+  })
+});
 
-// app.get("/api/person/:id", (request, response) => {
-//   const personId = Number(request.params.id);
-//   const person = personData.find((data) => data.id === personId);
-//   if (person) {
-//     response.json(person);
-//   } else {
-//     response.status(404).end();
-//   }
-// });
+app.get("/api/persons/:id", (request, response) => {
+  const personId = request.params.id;
+  Phonebook.findById(personId).then(person=>response.json(person)).catch(error=>console.log(error))
+});
 
 app.post("/api/persons", (request, response) => {
   // const personId = Math.floor(Math.random() * 100);
@@ -100,11 +101,20 @@ app.post("/api/persons", (request, response) => {
   })
 });
 
-app.delete("/api/person/:id", (request, response) => {
-  const personId = Number(request.params.id);
-  personData = personData.filter((data) => data.id !== personId);
-  response.status(204).end();
+app.put('/api/persons/:id',(request,response,next)=>{
+  const body=request.body
+  const contact={
+    name:body.name,
+    number:body.number,
+  }
+  Phonebook.findByIdAndUpdate(request.params.id,contact,{new:true}).then(updatedContact=>{response.json(updatedContact)}).catch(error=>next(error))
+})
+
+app.delete("/api/persons/:id", (request, response, next) => {
+  Phonebook.findByIdAndRemove(request.params.id).then(result=>response.status(204).end()).catch(error=>next(error))
 });
+
+app.use(errorHandler)
 
 const PORT = process.env.PORT || 3001
 app.listen(PORT, () => {
