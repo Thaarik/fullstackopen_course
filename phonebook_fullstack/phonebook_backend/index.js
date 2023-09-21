@@ -7,43 +7,23 @@ const Phonebook=require('./models/phonebook')
 app.use(cors())
 app.use(express.static('build'))
 morgan.token('object', function getId (req) {
-    // console.log(req);
     return JSON.stringify(req.body)
   })
 app.use(express.json());
 
 app.use(morgan(':method :url :status :object'))
 
-const errorHandler = (error,req,res,next)=>{
+const errorHandler = (error,request,response,next)=>{
   console.log(error.message);
   if(error.name==='CastError'){
     return res.status(400).send({error:'malformed id'})
+  }else if(error.name==='ValidationError'){
+    return response.status(400).json({error:error.message})
+  }else{
+    return response.status(400).json({error:error.message})
   }
   next(error)
 }
-
-// let personData = [
-//   {
-//     id: 1,
-//     name: "Arto Hellas",
-//     number: "040-123456",
-//   },
-//   {
-//     id: 2,
-//     name: "Ada Lovelace",
-//     number: "39-44-5323523",
-//   },
-//   {
-//     id: 3,
-//     name: "Dan Abramov",
-//     number: "12-43-234345",
-//   },
-//   {
-//     id: 4,
-//     name: "Mary Poppendieck",
-//     number: "39-23-6423122",
-//   },
-// ];
 
 app.get("/", (request, response) => {
   response.send("<h1>Hello World!</h1>");
@@ -68,7 +48,7 @@ app.get("/api/persons/:id", (request, response) => {
   Phonebook.findById(personId).then(person=>response.json(person)).catch(error=>console.log(error))
 });
 
-app.post("/api/persons", (request, response) => {
+app.post("/api/persons", (request, response,next) => {
   // const personId = Math.floor(Math.random() * 100);
   // const phonebookNames = personData.map((data) => data.name);
   // if (
@@ -98,7 +78,7 @@ app.post("/api/persons", (request, response) => {
   })
   contact.save().then(savedContact=>{
     response.json(savedContact)
-  })
+  }).catch(error=>next(error))
 });
 
 app.put('/api/persons/:id',(request,response,next)=>{
@@ -107,7 +87,7 @@ app.put('/api/persons/:id',(request,response,next)=>{
     name:body.name,
     number:body.number,
   }
-  Phonebook.findByIdAndUpdate(request.params.id,contact,{new:true}).then(updatedContact=>{response.json(updatedContact)}).catch(error=>next(error))
+  Phonebook.findByIdAndUpdate(request.params.id,contact,{new:true, runValidators: true, context: 'query'}).then(updatedContact=>{response.json(updatedContact)}).catch(error=>next(error))
 })
 
 app.delete("/api/persons/:id", (request, response, next) => {

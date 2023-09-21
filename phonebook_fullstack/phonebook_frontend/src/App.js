@@ -32,17 +32,29 @@ const App = () => {
     if (newName !== "") {
       if (!names.includes(newName)) {
         let newContact = { name: newName, number: newNumber };
-        RESTapi.create(newContact).then((returnedPersons) => {
-          setPersons(persons.concat(returnedPersons));
-          setmessage(`Added ${returnedPersons.name} !`);
-          setMessageType("success");
-          setTimeout(() => {
-            setmessage(null);
-            setMessageType(null);
-          }, 3000);
-          setNewName("");
-          setNewNumber("");
-        });
+        RESTapi.create(newContact)
+          .then((returnedPersons) => {
+            setPersons(persons.concat(returnedPersons));
+            setmessage(`Added ${returnedPersons.name} !`);
+            setMessageType("success");
+            setTimeout(() => {
+              setmessage(null);
+              setMessageType(null);
+              
+            }, 3000);
+            setNewName("");
+            setNewNumber("");
+          })
+          .catch((error) => {
+            
+            setmessage(`${error.response.data.error}`);
+            setMessageType("error");
+            console.log(messageType)
+            setTimeout(() => {
+              setmessage(null);
+              setMessageType(null);
+            },3000);
+          });
       } else {
         if (
           window.confirm(
@@ -107,8 +119,8 @@ const App = () => {
   return (
     <div>
       <h2>Phonebook</h2>
-      {messageType === "success" || messageType === "error" ? (
-        <Notification message={message} />
+      {messageType ? (
+        <Notification message={message} messageType={messageType} />
       ) : (
         <></>
       )}

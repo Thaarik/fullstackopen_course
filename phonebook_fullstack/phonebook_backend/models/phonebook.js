@@ -1,36 +1,46 @@
-const mongoose = require('mongoose')
+const mongoose = require("mongoose");
 
-mongoose.set('strictQuery', false)
+mongoose.set("strictQuery", false);
 
+const url = process.env.MONGODB_URI;
 
-const url = process.env.MONGODB_URI
+console.log("connecting to", url);
 
+mongoose
+  .connect(url)
 
-console.log('connecting to', url)
-
-mongoose.connect(url)
-
-  .then(result => {
-    console.log('connected to MongoDB')
+  .then((result) => {
+    console.log("connected to MongoDB");
   })
   .catch((error) => {
-    console.log('error connecting to MongoDB:', error.message)
-  })
-
+    console.log("error connecting to MongoDB:", error.message);
+  });
 
 //create new contact
 const contactSchema = new mongoose.Schema({
-    name: String,
-    number: String,
-  })
-  
+  name: {
+    type: String,
+    minLength: 3,
+    required: true,
+  },
+  number: {
+    type:String,
+    validate: {
+      validator:function(v){
+        return /\d{3}-\d{7}|\d{2}-\d{7}/.test(v)
+      },
+      message: props=>`${props.value} is not a valid phone number! The phone number must be in xxx-xxxxxxx or xx-xxxxxxx format`
+    },
+    required: true,
+  },
+});
 
-contactSchema.set('toJSON',{
-    transform:(document, returnObject)=>{
-        returnObject.id = returnObject._id.toString()
-        delete returnObject._id
-        delete returnObject.__v
-    }
-})
+contactSchema.set("toJSON", {
+  transform: (document, returnObject) => {
+    returnObject.id = returnObject._id.toString();
+    delete returnObject._id;
+    delete returnObject.__v;
+  },
+});
 
-module.exports = mongoose.model('Phonebook', contactSchema)
+module.exports = mongoose.model("Phonebook", contactSchema);
