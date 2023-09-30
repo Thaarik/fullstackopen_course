@@ -43,7 +43,7 @@ describe("total likes", () => {
     expect(result).toBe(5);
   });
 
-  test.only("return the favouriteBlog having he highest likes", () => {
+  test("return the favouriteBlog having he highest likes", () => {
     const result = listHelper.favouriteBlog(listWithManyBlog);
     expect(result).toEqual({
       title: "Considered Harmful",
