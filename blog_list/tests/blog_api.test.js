@@ -19,6 +19,12 @@ const initialBlogs = [
     url: "http://www.u.arizona.edu/~rubinson/copyright_violations/Go_To_Considered_Harmful.html",
     likes: 9,
   },
+  {
+    title: "Go To Statement Hahahahah",
+    author: " Dijkstra",
+    url: "http://www.u.arizona.edu/~rubinson/copyright_violations/Go_To_Considered_Harmful.html",
+    likes: 1234,
+  },
 ];
 
 //initialize the database before every test with the beforeEach
@@ -27,6 +33,8 @@ beforeEach(async () => {
   let blogObject = new Blog(initialBlogs[0]);
   await blogObject.save();
   blogObject = new Blog(initialBlogs[1]);
+  await blogObject.save();
+  blogObject = new Blog(initialBlogs[2]);
   await blogObject.save();
 });
 
@@ -99,6 +107,28 @@ test("Verify if the blog with no title or author throws an error", async () => {
   expect(response.body).toHaveLength(initialBlogs.length);
 });
 
+test("Verify the update PUT function using id", async () => {
+  const response1 = await api.get("/api/blogs");
+  const updateBlog = {
+    ...response1.body[1],
+    likes: 897,
+  };
+  await api
+    .put(`/api/blogs/${response1.body[1].id}`)
+    .send(updateBlog)
+    .expect(200);
+  const response2 = await api.get("/api/blogs");
+  console.log(response2.body[1])
+  console.log(response1.body[1]);
+  expect(response2.body[1].likes).not.toBe(response1.body[1].likes);
+});
+
+test("Verify the delete function using id", async () => {
+  const response1 = await api.get("/api/blogs");
+  await api.delete(`/api/blogs/${response1.body[0].id}`).expect(204);
+  const response2 = await api.get("/api/blogs");
+  expect(response2.body).toHaveLength(initialBlogs.length - 1);
+});
 //Once all the tests have finished running we have to close the database connection used by Mongoose.
 afterAll(async () => {
   await mongoose.connection.close();
