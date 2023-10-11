@@ -118,8 +118,6 @@ test("Verify the update PUT function using id", async () => {
     .send(updateBlog)
     .expect(200);
   const response2 = await api.get("/api/blogs");
-  console.log(response2.body[1])
-  console.log(response1.body[1]);
   expect(response2.body[1].likes).not.toBe(response1.body[1].likes);
 });
 
